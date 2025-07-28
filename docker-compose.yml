@@ -1,0 +1,19 @@
+version: "3.9"
+
+x-backend-base: &backend-base
+  build: .
+  environment:
+    - SIDEKIQ_REDIS_URL=redis://redis:6379/0
+
+services:
+  migrate:
+    <<: *backend-base
+    command: ruby script.rb
+    # intentionally not setting SIDEKIQ_MEDIA_STREAMS_REDIS_URL
+  worker:
+    <<: *backend-base
+    command: echo "Worker would run here"
+
+networks:
+  default:
+    name: test-net
