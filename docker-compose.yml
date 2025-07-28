@@ -6,6 +6,16 @@ x-backend-base: &backend-base
     - SIDEKIQ_REDIS_URL=redis://redis:6379/0
 
 services:
+  web:
+    labels:
+      shipyard.route: '/'
+    build:
+      context: .
+      args:
+        - TEST_ARG=${TEST_ARG}
+        - REDIS_URL=${SHIPYARD_DOMAIN_REDIS}
+    ports:
+      - '80'
   migrate:
     <<: *backend-base
     command: ruby script.rb
