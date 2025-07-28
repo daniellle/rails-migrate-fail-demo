@@ -1,3 +1,6 @@
+require "scout_apm"
+ScoutApm::Agent.instance.start
+
 require_relative "config/initializers/constants"
 require "rake"
 require "active_support/all"
