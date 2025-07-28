@@ -1,7 +1,7 @@
-begin
-  VALUE = ENV.fetch("SIDEKIQ_MEDIA_STREAMS_REDIS_URL")
+VALUE = ENV["SIDEKIQ_MEDIA_STREAMS_REDIS_URL"]
+
+if VALUE.nil?
+  puts "[WARNING] Missing ENV var SIDEKIQ_MEDIA_STREAMS_REDIS_URL"
+else
   puts "Got URL: #{VALUE}"
-rescue KeyError => e
-  puts "[WARNING] Missing ENV var SIDEKIQ_MEDIA_STREAMS_REDIS_URL: #{e.message}"
-  VALUE = nil
 end
