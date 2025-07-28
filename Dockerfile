@@ -5,4 +5,6 @@ COPY . .
 
 RUN bundle install
 
+ENV RAILS_ENV=development
+
 CMD ["bundle", "exec", "rake", "db:migrate"]
