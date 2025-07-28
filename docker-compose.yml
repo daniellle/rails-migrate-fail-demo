@@ -8,7 +8,7 @@ x-backend-base: &backend-base
 services:
   migrate:
     <<: *backend-base
-    command: ruby script.rb
+    command: bundle exec rake db:migrate
     # intentionally not setting SIDEKIQ_MEDIA_STREAMS_REDIS_URL
 
   worker:
