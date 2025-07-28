@@ -4,22 +4,18 @@ x-backend-base: &backend-base
   build: .
   environment:
     - SIDEKIQ_REDIS_URL=redis://redis:6379/0
+    - RAILS_ENV=development
 
 services:
   migrate:
     <<: *backend-base
     command: bundle exec rake db:migrate
     # intentionally not setting SIDEKIQ_MEDIA_STREAMS_REDIS_URL
+
   web:
     labels:
       shipyard.route: '/'
     build:
       context: .
-      args:
-        - TEST_ARG=${TEST_ARG}
-        - REDIS_URL=${SHIPYARD_DOMAIN_REDIS}
     ports:
       - '80'
-    environment:
-      CI: 'true'
-      CII: 'false'
