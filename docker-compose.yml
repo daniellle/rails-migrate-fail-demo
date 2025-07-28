@@ -6,6 +6,15 @@ x-backend-base: &backend-base
     - SIDEKIQ_REDIS_URL=redis://redis:6379/0
 
 services:
+  migrate:
+    <<: *backend-base
+    command: ruby script.rb
+    # intentionally not setting SIDEKIQ_MEDIA_STREAMS_REDIS_URL
+
+  worker:
+    <<: *backend-base
+    command: echo "Worker would run here"
+
   web:
     labels:
       shipyard.route: '/'
@@ -16,13 +25,9 @@ services:
         - REDIS_URL=${SHIPYARD_DOMAIN_REDIS}
     ports:
       - '80'
-  migrate:
-    <<: *backend-base
-    command: ruby script.rb
-    # intentionally not setting SIDEKIQ_MEDIA_STREAMS_REDIS_URL
-  worker:
-    <<: *backend-base
-    command: echo "Worker would run here"
+    environment:
+      CI: 'true'
+      CII: 'false'
 
 networks:
   default:
