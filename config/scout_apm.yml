@@ -1,0 +1,10 @@
+common: &defaults
+  key: dummykey1234567890
+  name: test-migrate-app
+  monitor: true
+
+development:
+  <<: *defaults
+
+production:
+  <<: *defaults
