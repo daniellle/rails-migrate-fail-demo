@@ -1,4 +1,4 @@
-version: "3.9"
+version: '3'
 
 x-backend-base: &backend-base
   build: .
@@ -7,15 +7,82 @@ x-backend-base: &backend-base
     - RAILS_ENV=development
 
 services:
-  migrate:
-    <<: *backend-base
-    command: bundle exec rake db:migrate
-    # intentionally not setting SIDEKIQ_MEDIA_STREAMS_REDIS_URL
-
   web:
+    build: .
     labels:
       shipyard.route: '/'
-    build:
-      context: .
+      shipyard.primary-route: true
+      shipyard.init: client/scripts/shipyard-web-init
+    environment:
+      - SHIPYARD_DOMAIN_API=api
+      - SHIPYARD_DOMAIN_WEB=web
+      - SHIPYARD_DOMAIN_WS=ws
+    command: 'serve --single client/build'
     ports:
-      - '80'
+      - "3000"
+
+  migrate:
+    <<: *backend-base
+    labels:
+      shipyard.job: true
+    command: bundle exec rake db:migrate
+    depends_on:
+      - postgres
+      - redis
+    # INTENTIONALLY not setting SIDEKIQ_MEDIA_STREAMS_REDIS_URL
+
+  api:
+    <<: *backend-base
+    labels:
+      shipyard.route: '/'
+    command: echo "API server starting..."
+    ports:
+      - "3000"
+    depends_on:
+      - migrate
+
+  worker:
+    <<: *backend-base
+    command: echo "Worker running..."
+    depends_on:
+      - migrate
+
+  ws:
+    <<: *backend-base
+    labels:
+      shipyard.route: '/'
+    command: echo "WebSocket server running..."
+    ports:
+      - "8080"
+    depends_on:
+      - redis
+
+  postgres:
+    image: 'pgautoupgrade/pgautoupgrade:16-alpine'
+    environment:
+      POSTGRES_USER: 'obscure-user'
+      POSTGRES_PASSWORD: 'obscure-password'
+      POSTGRES_DB: 'app'
+      PGDATA: '/var/lib/postgresql/data/pgdata'
+    volumes:
+      - 'postgres:/var/lib/postgresql/data'
+    ports:
+      - '5432'
+    labels:
+      shipyard.readiness.exec.command: '["pg_isready", "-U", "obscure-user"]'
+      shipyard.readiness.success_threshold: 1
+      shipyard.readiness.timeout_seconds: 10
+      shipyard.readiness.initial_delay: 5
+
+  redis:
+    image: 'redis:7.0-alpine'
+    ports:
+      - '6379'
+    labels:
+      shipyard.readiness.exec.command: '["redis-cli", "ping"]'
+      shipyard.readiness.success_threshold: 1
+      shipyard.readiness.timeout_seconds: 10
+      shipyard.readiness.initial_delay: 1
+
+volumes:
+  postgres:
